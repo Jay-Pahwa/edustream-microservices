@@ -1,0 +1,3 @@
+Flask
+mysqlclient # Library for MySQL connectivity
+boto3
