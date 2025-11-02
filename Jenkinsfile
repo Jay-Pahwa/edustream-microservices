@@ -9,7 +9,7 @@ pipeline {
         
         // --- THIS IS THE FIX ---
         // Explicitly adding the path for the AWS CLI v2
-        AWS_CLI_PATH   = "/usr/local/bin/aws"
+       AWS_CLI_PATH = "/usr/bin/aws"
     }
 
     // 3. STAGES
