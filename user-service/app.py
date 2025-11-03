@@ -12,7 +12,7 @@ DB_HOST = os.environ.get("DB_HOST", "edustream-database.c9kgo4igkbet.ap-south-1.
 
 # 1. Look for "DB_NAME".
 # 2. If not found, use "edustream_db" as the default.
-DB_NAME = os.environ.get("DB_NAME", "edustream-database")
+DB_NAME = os.environ.get("DB_NAME", "edustream_db")
 
 # 1. Look for "DB_USER".
 # 2. If not found, use "admin" as the default.
@@ -46,19 +46,9 @@ def home():
 
 @app.route('/api/status')
 def status():
-    # Function to test DB connectivity (replace with real test)
-    try:
-        conn = MySQLdb.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
-        conn.close()
-        db_status = "UP"
-    except Exception:
-        db_status = "DOWN" # It will show DOWN until deployed and configured with the real RDS host
-        
-    return jsonify({
-        "status": "UP",
-        "service": "User/Metadata Service",
-        "database_connection": db_status
-    })
+    # This is the dedicated health check endpoint.
+    # It MUST return 200 OK to pass the ALB health check.
+    return jsonify({"status": "UP", "service": "User/Metadata Service"}), 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
