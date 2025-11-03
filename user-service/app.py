@@ -1,55 +1,55 @@
 import os
 from flask import Flask, jsonify, render_template
-import MySQLdb # Using MySQL client
+import MySQLdb
 
 app = Flask(__name__)
 
 # --- Configuration (Pulled from deployment environment) ---
-
-# 1. Look for an env variable named "DB_HOST".
-# 2. If it's not found, use your RDS endpoint string as the default.
-DB_HOST = os.environ.get("DB_HOST", "edustream-database.c9kgo4igkbet.ap-south-1.rds.amazonaws.com")
-
-# 1. Look for "DB_NAME".
-# 2. If not found, use "edustream_db" as the default.
+DB_HOST = os.environ.get("DB_HOST", "db-endpoint-not-set")
 DB_NAME = os.environ.get("DB_NAME", "edustream_db")
-
-# 1. Look for "DB_USER".
-# 2. If not found, use "admin" as the default.
 DB_USER = os.environ.get("DB_USER", "admin")
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "password-not-set")
 
-# 1. Look for "DB_PASSWORD".
-# 2. If not found, use your REAL password as the default.
-DB_PASSWORD = os.environ.get("DB_PASSWORD", "As3jayaws")
+def get_db_status():
+    """Checks DB connection and returns a status string."""
+    try:
+        conn = MySQLdb.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
+        conn.close()
+        return "UP"
+    except Exception:
+        return "DOWN"
+
 @app.route('/')
 def home():
-    # This simulates fetching the video list from the database
-    videos = [
-        {"title": "DevOps Overview", "id": 1},
-        {"title": "Terraform in 5 Minutes", "id": 2}
+    """Renders the main homepage (index.html)."""
+    
+    # We will simulate the video list for now
+    # In a real app, you would fetch this from the database
+    video_list = [
+        {"title": "DevOps Overview", "description": "A quick intro to the principles of DevOps.", "id": 1},
+        {"title": "Terraform in 5 Minutes", "description": "Learn the basics of Infrastructure as Code.", "id": 2}
     ]
     
-    # *** DEMO ONLY: You'd render a real HTML template here ***
-    return f"""
-    <html>
-    <head><title>EduStream Lite</title></head>
-    <body>
-        <h1>Welcome to EduStream Lite</h1>
-        <h2>Database Host: {DB_HOST}</h2>
-        <p>This service retrieves video metadata (Title, ID) from the RDS database.</p>
-        <p>Videos Loaded: {len(videos)}</p>
-        <hr>
-        <p>Try visiting: /api/status or /api/videos</p>
-    </body>
-    </html>
-    """
+    # Pass data to the HTML template
+    return render_template('index.html', 
+                           videos=video_list, 
+                           db_host=DB_HOST)
 
 @app.route('/api/status')
 def status():
-    # This is the dedicated health check endpoint.
-    # It MUST return 200 OK. It does not check the database.
+    """This is the ALB Health Check. Must return 200 OK."""
     return jsonify({"status": "UP", "service": "User/Metadata Service"}), 200
 
+@app.route('/api/videos')
+def get_videos():
+    """This is the API endpoint to get video data."""
+    # This simulates fetching from the DB
+    video_list = [
+        {"title": "DevOps Overview", "id": 1},
+        {"title": "Terraform in 5 Minutes", "id": 2}
+    ]
+    return jsonify(video_list)
 
 if __name__ == '__main__':
+    # Runs on port 8082
     app.run(host='0.0.0.0', port=8082)
