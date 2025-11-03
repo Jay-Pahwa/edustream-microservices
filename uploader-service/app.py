@@ -7,6 +7,11 @@ app = Flask(__name__)
 # --- Configuration (Pulled from deployment environment) ---
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "edustream-videos-jayal-1029")
 
+@app.route('/')
+def health_check():
+    # This endpoint is just for the ALB health check
+    return jsonify({"status": "UP", "service": "Uploader Service"}), 200
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
