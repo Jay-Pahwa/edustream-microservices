@@ -46,10 +46,10 @@ def home():
 
 @app.route('/api/status')
 def status():
-    # This is the dedicated health check endpoint for the ALB.
-    # It MUST return 200 OK to pass the health check.
-    # It does not check the database.
+    # This is the dedicated health check endpoint.
+    # It MUST return 200 OK. It does not check the database.
     return jsonify({"status": "UP", "service": "User/Metadata Service"}), 200
 
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=8082)
