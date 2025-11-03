@@ -5,10 +5,10 @@ import MySQLdb
 app = Flask(__name__)
 
 # --- Configuration (Pulled from deployment environment) ---
-DB_HOST = os.environ.get("DB_HOST", "db-endpoint-not-set")
+DB_HOST = os.environ.get("DB_HOST", "edustream-database.c9kgo4igkbet.ap-south-1.rds.amazonaws.com")
 DB_NAME = os.environ.get("DB_NAME", "edustream_db")
 DB_USER = os.environ.get("DB_USER", "admin")
-DB_PASSWORD = os.environ.get("DB_PASSWORD", "password-not-set")
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "As3jayaws")
 
 def get_db_status():
     """Checks DB connection and returns a status string."""
