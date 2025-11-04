@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block title %}{{ video.title }}{% endblock %}
+{% block content %}
+
+<h1 class="mb-4">{{ video.title }}</h1>
+
+<div class="card video-card">
+    <div class="card-body">
+        <video controls width="100%" preload="auto" poster="https://placehold.co/600x400/000/fff?text=Loading+Video...">
+            <source src="{{ video_url }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+</div>
+
+<a href="{{ url_for('subject_page', subject_id=video.subject_id) }}" class="btn btn-outline-secondary mt-4">&larr; Back to Course</a>
+
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block title %}{{ subject.name }}{% endblock %}
+{% block content %}
+
+<h1 class="mb-4">{{ subject.name }}</h1>
+<p class="lead">{{ subject.description }}</p>
+
+<hr class="my-4">
+
+<h2 class="mb-4">Videos in this Course</h2>
+<div class="list-group">
+    {% for video in subject.videos %}
+    <a href="{{ url_for('video_player', video_id=video.id) }}" class="list-group-item list-group-item-action">
+        <strong>{{ video.title }}</strong>
+    </a>
+    {% else %}
+    <p>No videos available for this subject yet.</p>
+    {% endfor %}
+</div>
+
+<a href="{{ url_for('home') }}" class="btn btn-outline-secondary mt-4">&larr; Back to Subjects</a>
+
+{% endblock %}

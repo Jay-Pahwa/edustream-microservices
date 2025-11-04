@@ -9,9 +9,8 @@ RUN apt-get update && apt-get install -y default-libmysqlclient-dev gcc pkg-conf
     && rm -rf /var/lib/apt/lists/*
 
 # --- THIS IS THE CHANGE ---
-# Copy the app code AND the new templates folder
-COPY app.py .
-COPY templates/ ./templates/
+# Copy the entire application, including templates/ and static/
+COPY . .
 # --- END OF CHANGE ---
 
 EXPOSE 8082
