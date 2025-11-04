@@ -1,7 +1,6 @@
 import pymysql
 pymysql.install_as_MySQLdb()
 
-
 import os
 import boto3
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
@@ -24,7 +23,7 @@ S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "edustream-videos-jayal-1029")
 
 # Generate a secret key (required for login sessions)
 app.config['SECRET_KEY'] = 'a_very_secret_key_that_should_be_changed'
-# Create the full database connection URI
+# Create the full database connection URI - CHANGED TO PYMYSQL
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
 
 db = SQLAlchemy(app)
@@ -159,3 +158,18 @@ if __name__ == '__main__':
             db.session.commit()
             
     app.run(host='0.0.0.0', port=8082)
+```
+
+## Key changes made:
+1. **Line 1-2**: Added pymysql import and setup at the very top
+2. **Line 27**: Changed `mysql+mysqlclient://` to `mysql+pymysql://`
+
+Now also make sure your **requirements.txt** looks like this:
+```
+Flask
+pymysql
+cryptography
+boto3
+Flask-SQLAlchemy
+Flask-Login
+Flask-Bcrypt
