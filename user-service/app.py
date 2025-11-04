@@ -1,3 +1,7 @@
+import pymysql
+pymysql.install_as_MySQLdb()
+
+
 import os
 import boto3
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
@@ -21,7 +25,7 @@ S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "edustream-videos-jayal-1029")
 # Generate a secret key (required for login sessions)
 app.config['SECRET_KEY'] = 'a_very_secret_key_that_should_be_changed'
 # Create the full database connection URI
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+mysqlclient://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
 
 db = SQLAlchemy(app)
 s3_client = boto3.client('s3', region_name='ap-south-1')
