@@ -121,23 +121,9 @@ def video_player(video_id):
         flash('Video not found', 'danger')
         return redirect(url_for('home'))
     
-    # Generate S3 presigned URL for the video
-    try:
-        video_url = s3_client.generate_presigned_url(
-            'get_object',
-            Params={
-                'Bucket': S3_BUCKET_NAME, 
-                'Key': video.s3_key,
-                'ResponseContentType': 'video/mp4'
-            },
-            ExpiresIn=7200  # 2 hours
-        )
-        print(f"✅ Generated S3 URL for: {video.s3_key}")
-        print(f"🔗 Video URL: {video_url}")
-    except Exception as e:
-        print(f"❌ Error generating video URL: {e}")
-        flash('Error loading video. Please try again.', 'danger')
-        video_url = None
+    # SIMPLE DIRECT S3 URL - This works since direct links work
+    video_url = f"https://edustream-videos-jayal-1029.s3.ap-south-1.amazonaws.com/{video.s3_key}"
+    print(f"🎯 Video URL: {video_url}")
     
     return render_template('video_player.html', video=video, video_url=video_url)
 

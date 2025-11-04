@@ -23,43 +23,42 @@
                     </h2>
                     <small class="text-muted">From: {{ video.subject.name }}</small>
                 </div>
+                
                 <div class="card-body p-0">
                     {% if video_url %}
+                    <!-- Video Player -->
                     <div class="ratio ratio-16x9 bg-dark">
                         <video 
                             controls 
-                            class="w-100" 
-                            preload="metadata"
-                            poster="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=800&h=450&fit=crop"
+                            controlsList="nodownload"
+                            class="w-100"
+                            style="background-color: #000;"
+                            poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjQ1MCIgdmlld0JveD0iMCAwIDgwMCA0NTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI4MDAiIGhlaWdodD0iNDUwIiBmaWxsPSIjMEEwQTBBIi8+CjxwYXRoIGQ9Ik0zNjAgMjI1TDMxMCAyMDBMMzEwIDI1MEwzNjAgMjI1WiIgZmlsbD0iI0ZGRkZGRiIvPgo8dGV4dCB4PSI0MDAiIHk9IjI0MCIgZmlsbD0iI0ZGRkZGRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0Ij5Mb2FkaW5nIFZpZGVvLi4uPC90ZXh0Pgo8L3N2Zz4K"
                         >
                             <source src="{{ video_url }}" type="video/mp4">
-                            <source src="{{ video_url }}" type="video/quicktime">
-                            <source src="{{ video_url }}" type="video/x-ms-wmv">
                             Your browser does not support the video tag.
                         </video>
                     </div>
-                    <div class="p-3 bg-light">
-                        <div class="alert alert-info mb-0">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <strong>Video Source:</strong> {{ video_url|truncate(50) }}
-                            {% if "presigned" in video_url %}
-                            <br><small>Using S3 Presigned URL (expires in 2 hours)</small>
-                            {% else %}
-                            <br><small>Using Direct S3 URL</small>
-                            {% endif %}
+                    
+                    <!-- Success Message -->
+                    <div class="p-3 bg-light border-top">
+                        <div class="alert alert-success mb-0">
+                            <i class="bi bi-cloud-check me-2"></i>
+                            <strong>✅ Streaming from AWS S3</strong>
+                            <br>
+                            <small>File: {{ video.s3_key }} | 
+                            <a href="{{ video_url }}" target="_blank" class="text-decoration-none">Open Direct Link</a></small>
                         </div>
                     </div>
                     {% else %}
+                    <!-- Error State -->
                     <div class="text-center py-5 bg-light">
                         <i class="bi bi-exclamation-triangle display-1 text-warning"></i>
-                        <h4 class="mt-3 text-muted">Video Unavailable</h4>
-                        <p class="text-muted">We're having trouble loading this video. Please try again later.</p>
+                        <h4 class="mt-3 text-muted">Video Not Available</h4>
+                        <p class="text-muted">The video file was not found in S3 storage.</p>
                         <div class="mt-3">
-                            <a href="{{ url_for('subject_page', subject_id=video.subject_id) }}" class="btn btn-primary">
+                            <a href="{{ url_for('subject_page', video_id=video.subject_id) }}" class="btn btn-primary">
                                 <i class="bi bi-arrow-left me-2"></i>Back to Course
-                            </a>
-                            <a href="{{ url_for('home') }}" class="btn btn-outline-secondary ms-2">
-                                <i class="bi bi-house me-2"></i>Home
                             </a>
                         </div>
                     </div>
@@ -67,34 +66,46 @@
                 </div>
             </div>
 
-            <!-- Debug Information (only show if video_url exists) -->
+            <!-- Quick Test Section -->
             {% if video_url %}
             <div class="card mt-4">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
-                        <i class="bi bi-bug me-2"></i>Debug Information
+                        <i class="bi bi-wrench me-2"></i>Troubleshooting
                     </h5>
                 </div>
                 <div class="card-body">
+                    <p>If the video doesn't play above, try these steps:</p>
+                    
                     <div class="row">
                         <div class="col-md-6">
-                            <h6>Video Details:</h6>
-                            <ul class="list-unstyled">
-                                <li><strong>Title:</strong> {{ video.title }}</li>
-                                <li><strong>S3 Key:</strong> {{ video.s3_key }}</li>
-                                <li><strong>Subject:</strong> {{ video.subject.name }}</li>
-                                <li><strong>Bucket:</strong> {{ S3_BUCKET_NAME }}</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Testing:</h6>
-                            <p>If the video doesn't play above, try these:</p>
-                            <a href="{{ video_url }}" target="_blank" class="btn btn-sm btn-outline-primary me-2">
-                                <i class="bi bi-box-arrow-up-right me-1"></i>Open Direct Link
+                            <h6>Test Direct Link:</h6>
+                            <a href="{{ video_url }}" target="_blank" class="btn btn-success w-100 mb-2">
+                                <i class="bi bi-box-arrow-up-right me-2"></i>Open in New Tab
                             </a>
-                            <button onclick="reloadVideo()" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-arrow-clockwise me-1"></i>Reload Video
+                            <small class="text-muted">This should open and play the video directly.</small>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6>Refresh Video:</h6>
+                            <button onclick="refreshVideo()" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Reload Video
                             </button>
+                            <small class="text-muted">Reloads the video player.</small>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mt-3">
+                        <h6>Debug Information:</h6>
+                        <div class="bg-dark text-light p-3 rounded">
+                            <small>
+                                <strong>Video URL:</strong> {{ video_url }}<br>
+                                <strong>S3 Key:</strong> {{ video.s3_key }}<br>
+                                <strong>Bucket:</strong> edustream-videos-jayal-1029<br>
+                                <strong>Status:</strong> <span id="videoStatus">Loading...</span>
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -105,23 +116,68 @@
 </div>
 
 <script>
-function reloadVideo() {
+// Video status monitoring
+function updateVideoStatus() {
     const video = document.querySelector('video');
+    const statusElement = document.getElementById('videoStatus');
+    
     if (video) {
-        video.load();
-        video.play().catch(e => console.log('Auto-play prevented:', e));
+        video.addEventListener('loadstart', () => {
+            statusElement.textContent = 'Loading video...';
+            statusElement.style.color = 'orange';
+        });
+        
+        video.addEventListener('canplay', () => {
+            statusElement.textContent = 'Ready to play - click play button';
+            statusElement.style.color = 'green';
+        });
+        
+        video.addEventListener('error', (e) => {
+            statusElement.textContent = 'Error loading video';
+            statusElement.style.color = 'red';
+            console.error('Video error:', e);
+        });
+        
+        video.addEventListener('stalled', () => {
+            statusElement.textContent = 'Video stalled - buffering...';
+            statusElement.style.color = 'orange';
+        });
     }
 }
 
-// Try to play video when page loads
-document.addEventListener('DOMContentLoaded', function() {
+// Refresh video function
+function refreshVideo() {
     const video = document.querySelector('video');
     if (video) {
+        video.load();
+        document.getElementById('videoStatus').textContent = 'Reloading...';
+        document.getElementById('videoStatus').style.color = 'orange';
+    }
+}
+
+// Auto-play when user interacts (fix for browser restrictions)
+document.addEventListener('click', function() {
+    const video = document.querySelector('video');
+    if (video && video.paused) {
         video.play().catch(e => {
-            console.log('Auto-play was prevented:', e);
-            // User interaction required to play
+            console.log('Auto-play prevented, user interaction required');
         });
     }
+});
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    updateVideoStatus();
+    
+    // Try to auto-play after a short delay
+    setTimeout(() => {
+        const video = document.querySelector('video');
+        if (video) {
+            video.play().catch(e => {
+                console.log('Auto-play blocked by browser');
+            });
+        }
+    }, 1000);
 });
 </script>
 
