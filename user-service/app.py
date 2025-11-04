@@ -158,18 +158,5 @@ if __name__ == '__main__':
             db.session.commit()
             
     app.run(host='0.0.0.0', port=8082)
-```
 
-## Key changes made:
-1. **Line 1-2**: Added pymysql import and setup at the very top
-2. **Line 27**: Changed `mysql+mysqlclient://` to `mysql+pymysql://`
 
-Now also make sure your **requirements.txt** looks like this:
-```
-Flask
-pymysql
-cryptography
-boto3
-Flask-SQLAlchemy
-Flask-Login
-Flask-Bcrypt
