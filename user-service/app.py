@@ -13,17 +13,26 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+# Environment variables
 DB_HOST = os.environ.get("DB_HOST", "edustream-database.c9kgo4igkbet.ap-south-1.rds.amazonaws.com")
 DB_NAME = os.environ.get("DB_NAME", "edustream_db")
 DB_USER = os.environ.get("DB_USER", "admin")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "As3jayaws")
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "edustream-videos-jayal-1029")
 
-app.config['SECRET_KEY'] = 'a_very_secret_key_that_should_be_changed'
+app.config['SECRET_KEY'] = 'edustream_secret_key_2024'
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-s3_client = boto3.client('s3', region_name='ap-south-1')
+
+# Initialize AWS S3 client
+try:
+    s3_client = boto3.client('s3', region_name='ap-south-1')
+    print("✅ S3 client initialized successfully")
+except Exception as e:
+    print(f"❌ S3 Client Error: {e}")
+    s3_client = None
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -56,6 +65,7 @@ def login():
         
         if user and bcrypt.check_password_hash(user.password_hash, password):
             login_user(user)
+            flash(f'Welcome back, {username}!', 'success')
             return redirect(url_for('home'))
         else:
             flash('Login Unsuccessful. Please check username and password', 'danger')
@@ -85,6 +95,7 @@ def signup():
 @login_required
 def logout():
     logout_user()
+    flash('You have been logged out successfully.', 'info')
     return redirect(url_for('login'))
 
 @app.route('/')
@@ -97,45 +108,102 @@ def home():
 @login_required
 def subject_page(subject_id):
     subject = db.session.get(Subject, subject_id)
+    if not subject:
+        flash('Subject not found', 'danger')
+        return redirect(url_for('home'))
     return render_template('subject_page.html', subject=subject)
 
 @app.route('/video/<int:video_id>')
 @login_required
 def video_player(video_id):
     video = db.session.get(Video, video_id)
+    if not video:
+        flash('Video not found', 'danger')
+        return redirect(url_for('home'))
     
-    video_url = s3_client.generate_presigned_url(
-        'get_object',
-        Params={'Bucket': S3_BUCKET_NAME, 'Key': video.s3_key},
-        ExpiresIn=3600
-    )
+    # Generate S3 presigned URL for the video
+    try:
+        video_url = s3_client.generate_presigned_url(
+            'get_object',
+            Params={
+                'Bucket': S3_BUCKET_NAME, 
+                'Key': video.s3_key
+            },
+            ExpiresIn=3600  # 1 hour
+        )
+        print(f"✅ Generated S3 URL for: {video.s3_key}")
+    except Exception as e:
+        print(f"❌ Error generating video URL: {e}")
+        flash('Error loading video. Please try again.', 'danger')
+        video_url = None
     
     return render_template('video_player.html', video=video, video_url=video_url)
 
 @app.route('/api/status')
 def status():
-    return jsonify({"status": "UP", "service": "User/Metadata Service"}), 200
+    return jsonify({
+        "status": "UP", 
+        "service": "EduStream Video Service",
+        "s3_bucket": S3_BUCKET_NAME
+    }), 200
+
+def create_sample_data():
+    """Create sample subjects and videos that point to your S3 files"""
+    try:
+        # Only create if no subjects exist
+        if not Subject.query.first():
+            print("📦 Creating sample data...")
+            
+            # Create subjects
+            cloud_subject = Subject(
+                name="Cloud Computing", 
+                description="Master AWS services, cloud architecture, and deployment strategies.", 
+                image_url="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&h=400&fit=crop"
+            )
+            
+            devops_subject = Subject(
+                name="DevOps", 
+                description="Learn CI/CD pipelines, containerization, and infrastructure automation.", 
+                image_url="https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=600&h=400&fit=crop"
+            )
+            
+            db.session.add(cloud_subject)
+            db.session.add(devops_subject)
+            db.session.commit()
+            
+            # Create videos - USING YOUR EC2 VIDEO FOR ALL
+            videos_data = [
+                # Cloud Computing videos
+                {"title": "AWS EC2 Tutorial", "s3_key": "aws-ec2-tutorial.mp4", "subject": cloud_subject},
+                {"title": "Amazon S3 Deep Dive", "s3_key": "amazon-s3-deepdive.mp4", "subject": cloud_subject},
+                
+                # DevOps videos  
+                {"title": "Jenkins CI/CD Pipeline", "s3_key": "jenkins-cicd-pipeline.mp4", "subject": devops_subject},
+                {"title": "Docker Containerization", "s3_key": "docker-containerization.mp4", "subject": devops_subject}
+            ]
+            
+            for video_data in videos_data:
+                video = Video(
+                    title=video_data["title"],
+                    s3_key=video_data["s3_key"], 
+                    subject_id=video_data["subject"].id
+                )
+                db.session.add(video)
+            
+            db.session.commit()
+            print("✅ Sample data created successfully!")
+            
+    except Exception as e:
+        print(f"❌ Error creating sample data: {e}")
+        db.session.rollback()
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
-        
-        if not Subject.query.first():
-            print("Adding sample data...")
-            subject1 = Subject(name="Cloud Computing", description="Learn the fundamentals of AWS and cloud infrastructure.", image_url="https://placehold.co/600x400/007bff/white?text=Cloud")
-            subject2 = Subject(name="DevOps", description="Explore CI/CD, Docker, and automation.", image_url="https://placehold.co/600x400/6f42c1/white?text=DevOps")
-            db.session.add(subject1)
-            db.session.add(subject2)
-            db.session.commit()
-
-            video1 = Video(title="What is EC2?", s3_key="sample-video.mp4", subject_id=subject1.id)
-            video2 = Video(title="What is S3?", s3_key="sample-video.mp4", subject_id=subject1.id)
-            video3 = Video(title="What is Jenkins?", s3_key="sample-video.mp4", subject_id=subject2.id)
-            video4 = Video(title="What is Docker?", s3_key="sample-video.mp4", subject_id=subject2.id)
-            db.session.add(video1)
-            db.session.add(video2)
-            db.session.add(video3)
-            db.session.add(video4)
-            db.session.commit()
+        try:
+            db.create_all()
+            create_sample_data()
+        except Exception as e:
+            print(f"❌ Database initialization error: {e}")
             
-    app.run(host='0.0.0.0', port=8082)
+    print("🚀 Starting EduStream server on port 8082...")
+    app.run(host='0.0.0.0', port=8082, debug=True)
