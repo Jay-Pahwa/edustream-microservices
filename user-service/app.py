@@ -127,11 +127,13 @@ def video_player(video_id):
             'get_object',
             Params={
                 'Bucket': S3_BUCKET_NAME, 
-                'Key': video.s3_key
+                'Key': video.s3_key,
+                'ResponseContentType': 'video/mp4'
             },
-            ExpiresIn=3600  # 1 hour
+            ExpiresIn=7200  # 2 hours
         )
         print(f"✅ Generated S3 URL for: {video.s3_key}")
+        print(f"🔗 Video URL: {video_url}")
     except Exception as e:
         print(f"❌ Error generating video URL: {e}")
         flash('Error loading video. Please try again.', 'danger')
