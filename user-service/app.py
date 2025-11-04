@@ -15,7 +15,7 @@ login_manager.login_view = 'login' # Redirect to /login if user is not logged in
 DB_HOST = os.environ.get("DB_HOST", "edustream-database.c9kgo4igkbet.ap-south-1.rds.amazonaws.com")
 DB_NAME = os.environ.get("DB_NAME", "edustream_db")
 DB_USER = os.environ.get("DB_USER", "admin")
-DB_PASSWORD = os.environ.get("DB_PASSWORD", "Your-NEW-Secure-Password!")
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "As3jayaws")
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "edustream-videos-jayal-1029")
 
 # Generate a secret key (required for login sessions)
